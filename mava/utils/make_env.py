@@ -18,6 +18,7 @@ import jaxmarl
 import jumanji
 import matrax
 from gigastep import ScenarioBuilder
+from jaxmarl.environments.smax import Scenario
 from jaxmarl.environments.smax import map_name_to_scenario
 from jumanji.environments.routing.cleaner.generator import (
     RandomGenerator as CleanerRandomGenerator,
@@ -32,6 +33,7 @@ from jumanji.environments.routing.robot_warehouse.generator import (
     RandomGenerator as RwareRandomGenerator,
 )
 from omegaconf import DictConfig
+import jax.numpy as jnp
 
 from mava.types import MarlEnv
 from mava.wrappers import (
@@ -114,6 +116,75 @@ def make_jumanji_env(
 
     train_env, eval_env = add_extra_wrappers(train_env, eval_env, config)
     return train_env, eval_env
+
+MAP_NAME_TO_SCENARIO = {
+    # name: (unit_types, n_allies, n_enemies, SMACv2 position generation, SMACv2 unit generation)
+    "3m": Scenario(jnp.zeros((6,), dtype=jnp.uint8), 3, 3, False, False),
+    "2s3z": Scenario(
+        jnp.array([2, 2, 3, 3, 3] * 2, dtype=jnp.uint8), 5, 5, False, False
+    ),
+    "25m": Scenario(jnp.zeros((50,), dtype=jnp.uint8), 25, 25, False, False),
+    "3s5z": Scenario(
+        jnp.array(
+            [
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+                3,
+            ]
+            * 2,
+            dtype=jnp.uint8,
+        ),
+        8,
+        8,
+        False,
+        False,
+    ),
+    "8m": Scenario(jnp.zeros((16,), dtype=jnp.uint8), 8, 8, False, False),
+    "5m_vs_6m": Scenario(jnp.zeros((11,), dtype=jnp.uint8), 5, 6, False, False),
+    "10m_vs_11m": Scenario(jnp.zeros((21,), dtype=jnp.uint8), 10, 11, False, False),
+    "27m_vs_30m": Scenario(jnp.zeros((57,), dtype=jnp.uint8), 27, 30, False, False),
+    "3s5z_vs_3s6z": Scenario(
+        jnp.concatenate(
+            [
+                jnp.array([2, 2, 2, 3, 3, 3, 3, 3], dtype=jnp.uint8),
+                jnp.array([2, 2, 2, 3, 3, 3, 3, 3, 3], dtype=jnp.uint8),
+            ]
+        ),
+        8,
+        9,
+        False,
+        False,
+    ),
+    "3s_vs_5z": Scenario(
+        jnp.array([2, 2, 2, 3, 3, 3, 3, 3], dtype=jnp.uint8), 3, 5, False, False
+    ),
+    "6h_vs_8z": Scenario(
+        jnp.array([5, 5, 5, 5, 5, 5, 3, 3, 3, 3, 3, 3, 3, 3], dtype=jnp.uint8),
+        6,
+        8,
+        False,
+        False,
+    ),
+    "smacv2_5_units": Scenario(jnp.zeros((10,), dtype=jnp.uint8), 5, 5, True, True),
+    "smacv2_10_units": Scenario(jnp.zeros((20,), dtype=jnp.uint8), 10, 10, True, True),
+    "smacv2_20_units": Scenario(jnp.zeros((40,), dtype=jnp.uint8), 20, 20, True, True),
+    "smacv2_40_units": Scenario(jnp.zeros((80,), dtype=jnp.uint8), 40, 40, True, True),
+    "smacv2_80_units": Scenario(jnp.zeros((160,), dtype=jnp.uint8), 80, 80, True, True),
+    "smacv2_160_units": Scenario(jnp.zeros((320,), dtype=jnp.uint8), 160, 160, True, True),
+    "smacv2_320_units": Scenario(jnp.zeros((640,), dtype=jnp.uint8), 320, 320, True, True),
+    "smacv2_640_units": Scenario(jnp.zeros((1280,), dtype=jnp.uint8), 640, 640, True, True),
+    "smacv2_1280_units": Scenario(jnp.zeros((2560,), dtype=jnp.uint8), 1280, 1280, True, True),
+}
+
+
+def map_name_to_scenario(map_name):
+    """maps from smac map names to a scenario array"""
+    return MAP_NAME_TO_SCENARIO[map_name]
 
 
 def make_jaxmarl_env(
